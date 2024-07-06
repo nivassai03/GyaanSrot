@@ -8,3 +8,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Widgets Sql)
+
+
+add_subdirectory(src)
+
+add_executable(gyaansrot src/main.cpp src/application.h src/application.cpp)
+
+# target_link_libraries(gyaansrot PRIVATE Qt6::Core Qt6::Network Qt6::Widgets FeedFetcher)
+
+target_link_libraries(gyaansrot PRIVATE Qt6::Core Qt6::Network Qt6::Widgets Network Parser Database Util Gui)
+
