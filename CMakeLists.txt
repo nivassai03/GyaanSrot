@@ -12,7 +12,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Widgets Sql)
 
 add_subdirectory(src)
 
-add_executable(gyaansrot src/main.cpp src/application.h src/application.cpp)
+add_executable(gyaansrot WIN32 src/main.cpp src/application.h src/application.cpp)
 
 # target_link_libraries(gyaansrot PRIVATE Qt6::Core Qt6::Network Qt6::Widgets FeedFetcher)
 

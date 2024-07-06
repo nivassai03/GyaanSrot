@@ -12,7 +12,7 @@ std::string titleToSlug(const std::string &title, char del, int len)
         unsigned char ch = static_cast<unsigned char>(it);
         if (std::isalnum(ch))
         {
-            ss.put(std::towlower(ch));
+            ss.put(std::tolower(ch));
         }
         else if (std::isspace(ch))
         {
