@@ -36,11 +36,11 @@ void Source::uninstallSource()
 {
     isInstalled = false;
 }
-std::string Source::getSourceName()
+std::string Source::getSourceName() const
 {
     return sourceName;
 }
-std::string Source::getSourceUrl()
+std::string Source::getSourceUrl() const
 {
     return sourceUrl;
 }

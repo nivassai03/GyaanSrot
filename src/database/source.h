@@ -13,8 +13,8 @@ public:
     void setSourceUrl(std::string_view sourceUrl);
     void installSource();
     void uninstallSource();
-    std::string getSourceName();
-    std::string getSourceUrl();
+    std::string getSourceName() const;
+    std::string getSourceUrl() const;
     bool isSourceInstalled();
 
 private:
