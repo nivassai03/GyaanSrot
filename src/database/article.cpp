@@ -5,6 +5,19 @@ Article::Article(const std::string &title, const std::string &description, const
 {
 }
 
+Article::Article(const std::string &title, const std::string &description, const std::string &url, const std::string &imgUrl, const std::chrono::system_clock::time_point &tp, const std::string &guid, const std::string &imgName, const std::string &source, const std::string &category)
+    : title(title),
+      description(description),
+      url(url),
+      imgUrl(imgUrl),
+      pubDate(tp),
+      guid(guid),
+      imgName(imgName),
+      source(source),
+      category(category)
+{
+}
+
 Article::Article(const Article &rhs)
 {
     title = rhs.title;

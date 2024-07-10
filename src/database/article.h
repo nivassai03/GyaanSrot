@@ -7,6 +7,7 @@ class Article
 public:
     Article() = default;
     Article(const std::string &title, const std::string &description, const std::string &url, const std::string &imgUrl);
+    Article(const std::string &title, const std::string &description, const std::string &url, const std::string &imgUrl, const std::chrono::system_clock::time_point &tp, const std::string &guid, const std::string &imgName, const std::string &source, const std::string &category);
     Article(const Article &rhs);
     Article &operator=(const Article &rhs);
     void setTitle(const std::string &title);
@@ -36,8 +37,8 @@ private:
     std::string description;
     std::string url;
     std::string imgUrl;
-    std::string guid;
     std::chrono::system_clock::time_point pubDate;
+    std::string guid;
     std::string imgName;
     std::string category;
     std::string source;
