@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QSqlError>
 #include "../utils/Qtdirutil.h"
+#include "../utils/util.h"
 #include <QSqlQuery>
 
 void DbManager::setupDatabase(std::string_view dbName)
@@ -96,13 +97,8 @@ bool DbManager::insertArticle(const Article &article, int sourceId)
     return query.exec();
 }
 
-void DbManager::insertArticles(const std::unordered_map<std::string, std::unordered_map<std::string, std::vector<Article>>> &articles)
+void DbManager::insertArticleList(const std::unordered_map<std::string, std::unordered_map<std::string, std::vector<Article>>> &articles)
 {
-
-    qDebug() << "Writing Article to Db...\n";
-    QSqlQuery query(db);
-    query.exec("BEGIN TRANSACTION");
-
     for (const auto &categoryPair : articles)
     {
         const std::string &categoryName = categoryPair.first;
@@ -110,36 +106,39 @@ void DbManager::insertArticles(const std::unordered_map<std::string, std::unorde
         {
             const std::string &sourceName = sourcePair.first;
             const std::vector<Article> &articleList = sourcePair.second;
+            insertArticleList(articleList, categoryName, sourceName);
+        }
+    }
+}
 
-            query.prepare("SELECT Sources.source_id "
-                          "FROM Sources "
-                          "JOIN Categories ON Sources.category_id = Categories.category_id "
-                          "WHERE Sources.source_name = :source AND Categories.category_name = :category ");
-            query.bindValue(":source", QString::fromStdString(sourceName));
-            query.bindValue(":category", QString::fromStdString(categoryName));
-            qDebug() << query.isValid() << "\n";
-            if (!query.exec())
-            {
-                qDebug() << "Category: " << categoryName << " Source: " << sourceName << "Failed to execute query: " << query.lastError().text();
-            }
-            int sourceId = -1;
-            if (query.next())
-            {
-                sourceId = query.value(0).toInt();
-            }
-            if (sourceId != -1)
-            {
-                for (const auto &article : articleList)
-                {
-                    insertArticle(article, sourceId);
-                }
-            }
+void DbManager::insertArticleList(const std::vector<Article> &articles, const std::string &category, const std::string &source)
+{
+    QSqlQuery query(db);
+    query.exec("BEGIN TRANSACTION");
+    query.prepare("SELECT Sources.source_id "
+                  "FROM Sources "
+                  "JOIN Categories ON Sources.category_id = Categories.category_id "
+                  "WHERE Sources.source_name = :source AND Categories.category_name = :category ");
+    query.bindValue(":source", QString::fromStdString(source));
+    query.bindValue(":category", QString::fromStdString(category));
+    if (!query.exec())
+    {
+        qDebug() << "Failed to execute query: " << query.lastError().text();
+    }
+    int sourceId = -1;
+    if (query.next())
+    {
+        sourceId = query.value(0).toInt();
+    }
+    if (sourceId != -1)
+    {
+        for (const auto &article : articles)
+        {
+            insertArticle(article, sourceId);
         }
     }
     query.exec("END TRANSACTION");
-    qDebug() << "Article Written to Db...\n";
 }
-
 std::vector<Category> DbManager::fetchCategoriesAndSources()
 {
     std::vector<Category> categories;
@@ -166,6 +165,36 @@ std::vector<Category> DbManager::fetchCategoriesAndSources()
         categories.push_back(category);
     }
     return categories;
+}
+
+std::vector<Article> DbManager::fetchArticlesFromDb(const std::string &category, const std::string &source) const
+{
+    std::vector<Article> articles;
+    QSqlQuery query(db);
+    query.prepare("SELECT Articles.title,Articles.description,Articles.url,Articles.img_url,Articles.pub_date,Articles.guid,Articles.img_name "
+                  "FROM Articles "
+                  "INNER JOIN Sources on Sources.source_id = Articles.source_id "
+                  "INNER JOIN Categories on Categories.category_id = Sources.category_id "
+                  "WHERE Sources.source_name = :source AND Categories.category_name = :category ");
+    query.bindValue(":source", QString::fromStdString(source));
+    query.bindValue(":category", QString::fromStdString(category));
+    if (!query.exec())
+    {
+        qDebug() << "Fecth Article From DB Execution Failed: " << query.lastError().text();
+        return articles;
+    }
+    while (query.next())
+    {
+        const std::string &title = query.value(0).toString().toStdString();
+        const std::string &description = query.value(1).toString().toStdString();
+        const std::string &url = query.value(2).toString().toStdString();
+        const std::string &imgUrl = query.value(3).toString().toStdString();
+        const std::chrono::system_clock::time_point &pubDate = fromEpochSeconds(query.value(4).toInt());
+        const std::string &guid = query.value(5).toString().toStdString();
+        const std::string &imgName = query.value(6).toString().toStdString();
+        articles.push_back(Article(title, description, url, imgUrl, pubDate, guid, imgName, source, category));
+    }
+    return articles;
 }
 
 void DbManager::addDummyData()
