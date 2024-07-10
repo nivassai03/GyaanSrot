@@ -3,10 +3,11 @@
 #include <QString>
 #include <QLabel>
 #include "elidedlabel.h"
+#include <QFrame>
 #include <QPixmap>
 #include "../database/article.h"
 
-class FeedItem : public QWidget
+class FeedItem : public QFrame
 {
     Q_OBJECT
 
