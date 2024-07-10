@@ -1,18 +1,21 @@
 #pragma once
 #include <QWidget>
-#include <QScrollArea>
+#include <QListWidget>
 #include <QVBoxLayout>
 #include "feeditem.h"
 #include "../database/article.h"
 
-class FeedList : public QScrollArea
+class FeedList : public QWidget
 {
     Q_OBJECT
 
 private:
-    QWidget *containerWidget;
-    QVBoxLayout *layout;
-    void addArticle(const Article &article);
+    QListWidget *listWidget;
+
+    void clearArticles();
+
+signals:
+    void articleClicked(const QString &url);
 
 public:
     FeedList(QWidget *parent = nullptr);

@@ -1,23 +1,31 @@
 #include "feedlist.h"
 
-FeedList::FeedList(QWidget *parent) : QScrollArea(parent)
+FeedList::FeedList(QWidget *parent)
+    : QWidget(parent), listWidget(new QListWidget(this))
 {
-    containerWidget = new QWidget();
-    layout = new QVBoxLayout(containerWidget);
-    containerWidget->setLayout(layout);
-    setWidget(containerWidget);
-    setWidgetResizable(true);
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->addWidget(listWidget);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(10);
+    setLayout(layout);
 }
-void FeedList::addArticle(const Article &article)
+
+void FeedList::clearArticles()
 {
-    FeedItem *feeditem = new FeedItem(this, article);
-    layout->addWidget(feeditem);
-    containerWidget->adjustSize();
+    listWidget->clear();
 }
+
 void FeedList::loadArticles(const std::vector<Article> &articles)
 {
+    clearArticles();
     for (const auto &article : articles)
     {
-        addArticle(article);
+        QListWidgetItem *item = new QListWidgetItem(listWidget);
+        FeedItem *feedItem = new FeedItem(listWidget, article);
+        item->setSizeHint(feedItem->sizeHint());
+        listWidget->addItem(item);
+        listWidget->setItemWidget(item, feedItem);
+
+        connect(feedItem, &FeedItem::articleClicked, this, &FeedList::articleClicked);
     }
 }
