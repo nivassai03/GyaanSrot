@@ -2,6 +2,7 @@
 #include <QWidget>
 #include <QString>
 #include <QLabel>
+#include "elidedlabel.h"
 #include <QPixmap>
 #include "../database/article.h"
 
@@ -18,7 +19,7 @@ private:
     Article article;
 
     QLabel *titleLabel;
-    QLabel *descriptionLabel;
+    ElidedLabel *descriptionLabel;
     QLabel *thumbnailLabel;
 
 signals:

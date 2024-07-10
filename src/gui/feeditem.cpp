@@ -18,6 +18,7 @@ FeedItem::FeedItem(QWidget *parent, const Article &art) : QWidget(parent), artic
     defaultThumbnail = QPixmap(pixmapPath);
 
     titleLabel = new QLabel(title, this);
+    descriptionLabel = new ElidedLabel(description, this);
     descriptionLabel = new QLabel(description, this);
     thumbnailLabel = new QLabel(this);
     if (!thumbnail.isNull())
