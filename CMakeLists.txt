@@ -7,12 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Widgets Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Widgets Sql WebEngineWidgets)
 
 
 add_subdirectory(src)
 
-add_executable(gyaansrot WIN32 src/main.cpp src/application.h src/application.cpp)
+add_executable(gyaansrot WIN32 src/main.cpp src/mainapplication.h src/mainapplication.cpp)
 
 # target_link_libraries(gyaansrot PRIVATE Qt6::Core Qt6::Network Qt6::Widgets FeedFetcher)
 
