@@ -1,11 +1,12 @@
 #pragma once
 #include "dirutil.h"
 #include <QString>
+#include <QObject>
 
-class QtDirUtil : public DirUtil
+class QtDirUtil : public QObject, public DirUtil
 {
 public:
-    QtDirUtil();
+    QtDirUtil(QObject *parent = nullptr);
     void initApplicationDirs() override;
     bool dirExists(std::string_view dir) override;
     void createDir(std::string_view dir) override;

@@ -5,9 +5,10 @@
 #include <string_view>
 #include <QDir>
 
-QtDirUtil::QtDirUtil() : homeDirFullPath(QStandardPaths::writableLocation(QStandardPaths::HomeLocation)),
-                         appDataDirFullPath(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)),
-                         thumbnailDir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).append("/.thumbnails")) {}
+QtDirUtil::QtDirUtil(QObject *parent) : QObject(parent),
+                                        homeDirFullPath(QStandardPaths::writableLocation(QStandardPaths::HomeLocation)),
+                                        appDataDirFullPath(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)),
+                                        thumbnailDir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).append("/.thumbnails")) {}
 
 void QtDirUtil::initApplicationDirs()
 {
@@ -57,4 +58,6 @@ std::string QtDirUtil::getAppDataDirFullPath()
 }
 std::string QtDirUtil::getImgDirFullPath(std::string_view imgDir)
 {
+    QString dir = thumbnailDir.append("/").append(imgDir);
+    return dir.toStdString();
 }
