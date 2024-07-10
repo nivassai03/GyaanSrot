@@ -1,7 +1,8 @@
 #include "feeditem.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QFile>
+#include <QPalette>
+#include <QColor>
 #include "../utils/Qtdirutil.h"
 #include "../utils/util.h"
 
@@ -58,9 +59,6 @@ FeedItem::FeedItem(QWidget *parent, const Article &art) : QFrame(parent), articl
         thumbnailLabel->setPixmap(thumbnail.scaled(150, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    QHBoxLayout *contentLayout = new QHBoxLayout();
-
     contentLayout->addWidget(thumbnailLabel);
     QVBoxLayout *textLayout = new QVBoxLayout();
     textLayout->addWidget(titleLabel);
@@ -70,4 +68,23 @@ FeedItem::FeedItem(QWidget *parent, const Article &art) : QFrame(parent), articl
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     setLayout(mainLayout);
+}
+
+void FeedItem::enterEvent(QEnterEvent *event)
+{
+    QPalette palette = this->palette();
+    QColor highlightColor = palette.color(QPalette::Highlight);
+    setStyleSheet(QString("background-color: %1;").arg(highlightColor.name()));
+    QWidget::enterEvent(event);
+}
+void FeedItem::leaveEvent(QEvent *event)
+{
+    setStyleSheet("");
+    QWidget::leaveEvent(event);
+}
+
+void FeedItem::mousePressEvent(QMouseEvent *event)
+{
+    emit articleClicked(articleUrl);
+    QFrame::mousePressEvent(event);
 }
