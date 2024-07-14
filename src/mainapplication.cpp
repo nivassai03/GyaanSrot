@@ -23,8 +23,7 @@ MainApplication::MainApplication(QWidget *parent, const std::string &dbName)
       fid(new QtFeedImageDownloader()),
       util(new QtDirUtil())
 {
-    fetchData();
-
+    initInitialArticleData();
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
@@ -80,18 +79,16 @@ MainApplication::MainApplication(QWidget *parent, const std::string &dbName)
     connect(feedList->filterSelector, &FilterSelector::searchTextCleared, this, &MainApplication::onSearchTextCleared);
 }
 
-void MainApplication::fetchData()
+void MainApplication::initInitialArticleData()
 {
     categories = manager.fetchCategoriesAndSources();
-    for (auto category : categories)
+    for (const auto &category : categories)
     {
-        for (auto source : category.getSources())
+        for (const auto &source : category.getSources())
         {
             const std::vector<Article> &articleList = parser->getArticleList(fetcher->getFeedXmlData(source.getSourceUrl()), category.getCategoryName(), source.getSourceName());
             fid->downloadAllImages(articleList, category.getCategoryName(), source.getSourceName());
-            articles[category.getCategoryName()][source.getSourceName()] = articleList;
             manager.insertArticleList(articleList, category.getCategoryName(), source.getSourceName());
-            sources.push_back(source);
         }
     }
 }
@@ -106,13 +103,10 @@ void MainApplication::sourceSelected(const QString &category, const QString &sou
     {
         feedList->filterSelector->setEnabled(false);
     }
-    const std::vector<Article> &newArticleList = articles[category.toStdString()][source.toStdString()];
-    reloadNewArticles(newArticleList);
-}
-
-void MainApplication::updateFeedList(const QString &category, const QString &source)
-{
-    const std::vector<Article> &newArticleList = articles[category.toStdString()][source.toStdString()];
+    const std::string &filter = feedList->getFilter().toStdString();
+    const std::string &sortOrder = feedList->getSortOrder().toStdString();
+    const std::string &searchText = feedList->getSearchText().toStdString();
+    const std::vector<Article> &newArticleList = manager.fetchArticlesFromDB(filter, sortOrder, searchText, category.toStdString(), source.toStdString());
     reloadNewArticles(newArticleList);
 }
 
@@ -126,7 +120,6 @@ void MainApplication::onFilterChanged(const QString &filter)
     const std::string &sortOrder = feedList->getSortOrder().toStdString();
     const std::string &category = sourceTree->getCurrentCategory().toStdString();
     const std::string &source = sourceTree->getCurrentSource().toStdString();
-    qDebug() << "Filter Changed: " << filter << " sort Order: " << sortOrder << " Category: " << category << " Source: " << source;
     const std::vector<Article> &newArticleList = manager.fetchFilteredAndSortedArticles(filter.toStdString(), sortOrder, category, source);
     reloadNewArticles(newArticleList);
 }
@@ -136,7 +129,6 @@ void MainApplication::onSortChanged(const QString &sortOrder)
     const std::string &filter = feedList->getFilter().toStdString();
     const std::string &category = sourceTree->getCurrentCategory().toStdString();
     const std::string &source = sourceTree->getCurrentSource().toStdString();
-    qDebug() << "sortOrder Changed: " << sortOrder << " filter: " << filter << " Category: " << category << " Source: " << source;
     const std::vector<Article> &newArticleList = manager.fetchFilteredAndSortedArticles(filter, sortOrder.toStdString(), category, source);
     reloadNewArticles(newArticleList);
 }
@@ -148,7 +140,6 @@ void MainApplication::onSearchTextChanged(const QString &searchText)
     const std::string &sortOrder = feedList->getSortOrder().toStdString();
     const std::string &category = sourceTree->getCurrentCategory().toStdString();
     const std::string &source = sourceTree->getCurrentSource().toStdString();
-    qDebug() << "searchText Changed: " << searchText.toStdString() << " sortOrder: " << sortOrder << " filter: " << filter << " Category: " << category << " Source: " << source;
     const std::vector<Article> &newArticleList = manager.fetchArticlesFromDB(filter, sortOrder, searchText.toStdString(), category, source);
     reloadNewArticles(newArticleList);
 }
@@ -159,7 +150,6 @@ void MainApplication::onSearchTextCleared()
     const std::string &sortOrder = feedList->getSortOrder().toStdString();
     const std::string &category = sourceTree->getCurrentCategory().toStdString();
     const std::string &source = sourceTree->getCurrentSource().toStdString();
-    qDebug() << "searchText Cleared: " << " sortOrder: " << sortOrder << " filter: " << filter << " Category: " << category << " Source: " << source;
     const std::vector<Article> &newArticleList = manager.fetchArticlesFromDB(filter, sortOrder, "", category, source);
     reloadNewArticles(newArticleList);
 }

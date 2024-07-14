@@ -329,7 +329,7 @@ std::vector<Article> DbManager::fetchArticlesFromDB(const std::string &filter, c
                         "INNER JOIN Sources on Sources.source_id = Articles.source_id "
                         "INNER JOIN Categories on Categories.category_id = Sources.category_id "
                         "WHERE Sources.source_name = :source AND Categories.category_name = :category ");
-    if (filter == "Today")
+    if (filter == "" || filter == "Today")
     {
         queryString += "AND " + QString("pub_date >= %1 ").arg(QString::number(todayStart));
     }
@@ -345,7 +345,7 @@ std::vector<Article> DbManager::fetchArticlesFromDB(const std::string &filter, c
     {
         queryString += "ORDER BY pub_date ASC ";
     }
-    if (sortOrder == "Date Descending")
+    if (sortOrder == "" || sortOrder == "Date Descending")
     {
         queryString += "ORDER BY pub_date DESC ";
     }

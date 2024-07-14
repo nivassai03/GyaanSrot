@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include "gui/feedlist.h"
 #include <QWidget>
+#include <QTabWidget>
 #include <vector>
 #include <unordered_map>
 #include <string_view>
@@ -30,11 +31,9 @@ private:
     FeedImageDownloader *fid;
     DbManager manager;
     DirUtil *util;
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<Article>>> articles;
     std::vector<Category> categories;
-    std::vector<Source> sources;
     void openArticleInWebView(const QString &url);
-    void fetchData();
+    void initInitialArticleData();
     void onFilterChanged(const QString &filter);
     void onSortChanged(const QString &sortOrder);
     void onSearchTextChanged(const QString &searchText);
@@ -42,7 +41,6 @@ private:
 
 public slots:
     void sourceSelected(const QString &category, const QString &source);
-    void updateFeedList(const QString &category, const QString &source);
 
 public:
     void reloadNewArticles(const std::vector<Article> &articleList);
