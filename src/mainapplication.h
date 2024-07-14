@@ -23,10 +23,6 @@ class MainApplication : public QMainWindow
 
 private:
     FeedList *feedList;
-    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<Article>>> articles;
-    std::vector<Category> categories;
-    std::vector<Source> sources;
-    void fetchData();
     FeedFetcher *fetcher;
     SourceTree *sourceTree;
     WebView *webview;
@@ -34,10 +30,19 @@ private:
     FeedImageDownloader *fid;
     DbManager manager;
     DirUtil *util;
+    std::unordered_map<std::string, std::unordered_map<std::string, std::vector<Article>>> articles;
+    std::vector<Category> categories;
+    std::vector<Source> sources;
     void openArticleInWebView(const QString &url);
+    void fetchData();
+    void onFilterChanged(const QString &filter);
+    void onSortChanged(const QString &sortOrder);
+    void onSearchTextChanged(const QString &searchText);
+    void onSearchTextCleared();
 
 public slots:
-    void updateFeedList(const std::string &category, const std::string &source);
+    void sourceSelected(const QString &category, const QString &source);
+    void updateFeedList(const QString &category, const QString &source);
 
 public:
     void reloadNewArticles(const std::vector<Article> &articleList);

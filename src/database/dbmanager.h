@@ -12,10 +12,12 @@ public:
     void addDummyData();
     std::vector<Category> fetchCategoriesAndSources();
     std::vector<Article> fetchArticlesFromDb(const std::string &category, const std::string &source) const;
+    // std::vector<Article> fetchTodaysArticles(const std::string &category, const std::string &source) const;
+    std::vector<Article> fetchFilteredAndSortedArticles(const std::string &filter, const std::string &sortOrder, const std::string &category, const std::string &source);
+    std::vector<Article> fetchArticlesFromDB(const std::string &filter, const std::string &sortOrder, const std::string &searchText, const std::string &category, const std::string &source);
     bool insertArticle(const Article &article, int sourceId);
     void insertArticleList(const std::unordered_map<std::string, std::unordered_map<std::string, std::vector<Article>>> &articles);
     void insertArticleList(const std::vector<Article> &articles, const std::string &category, const std ::string &source);
-    int64_t parseRfc822Date(const std::string &datetime);
 
 private:
     void setupDatabase(std::string_view dbName);
@@ -23,5 +25,9 @@ private:
     void addInitialCategoriesAndSources();
     void createSourceTable();
     void createArticleTable();
+    void createIndexes();
+    int64_t parseRfc822Date(const std::string &datetime);
+    int64_t getTodaysEpochSeconds();
+    int64_t getYesterdaysEpochSeconds();
     QSqlDatabase db;
 };
