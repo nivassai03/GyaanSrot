@@ -275,19 +275,6 @@ std::vector<Article> DbManager::fetchFilteredAndSortedArticles(const std::string
                         "INNER JOIN Sources on Sources.source_id = Articles.source_id "
                         "INNER JOIN Categories on Categories.category_id = Sources.category_id "
                         "WHERE Sources.source_name = :source AND Categories.category_name = :category ");
-    // QString conditions;
-    // if (filter == "Today")
-    // {
-    //     conditions = QString("pub_date >= %1").arg(todayStart);
-    // }
-    // else if (filter == "Yesterday")
-    // {
-    //     conditions = QString("pub_date >= %1 AND pub_date < %2").arg(yesterdayStart, todayStart);
-    // }
-    // if (!conditions.isEmpty())
-    // {
-    //     queryString += "AND " + conditions;
-    // }
     if (filter == "Today")
     {
         queryString += "AND " + QString("pub_date >= %1 ").arg(QString::number(todayStart));
@@ -308,9 +295,6 @@ std::vector<Article> DbManager::fetchFilteredAndSortedArticles(const std::string
     {
         queryString += "ORDER BY title ";
     }
-    qDebug() << "Query String:-------------------------------";
-    qDebug() << queryString;
-    qDebug() << "--------------------------------------------";
     query.prepare(queryString);
     query.bindValue(":category", QString::fromStdString(category));
     query.bindValue(":source", QString::fromStdString(source));
@@ -320,10 +304,6 @@ std::vector<Article> DbManager::fetchFilteredAndSortedArticles(const std::string
         qDebug() << "Fecth Article From DB Execution Failed: " << query.lastError().text();
         return articles;
     }
-
-    qDebug() << "Query:---------------------------------------";
-    qDebug() << query.lastQuery();
-    qDebug() << "---------------------------------------------";
     while (query.next())
     {
         const std::string &title = query.value(0).toString().toStdString();
@@ -335,7 +315,6 @@ std::vector<Article> DbManager::fetchFilteredAndSortedArticles(const std::string
         const std::string &imgName = query.value(6).toString().toStdString();
         articles.push_back(Article(title, description, url, imgUrl, pubDate, guid, imgName, source, category));
     }
-    qDebug() << "Article Count: " << articles.size();
     return articles;
 }
 
@@ -374,9 +353,6 @@ std::vector<Article> DbManager::fetchArticlesFromDB(const std::string &filter, c
     {
         queryString += "ORDER BY title ";
     }
-    qDebug() << "Query String:-------------------------------";
-    qDebug() << queryString;
-    qDebug() << "--------------------------------------------";
     query.prepare(queryString);
     query.bindValue(":category", QString::fromStdString(category));
     query.bindValue(":source", QString::fromStdString(source));
@@ -389,10 +365,6 @@ std::vector<Article> DbManager::fetchArticlesFromDB(const std::string &filter, c
         qDebug() << "Fecth Article From DB Execution Failed: " << query.lastError().text();
         return articles;
     }
-
-    qDebug() << "Query:---------------------------------------";
-    qDebug() << query.lastQuery();
-    qDebug() << "---------------------------------------------";
     while (query.next())
     {
         const std::string &title = query.value(0).toString().toStdString();
@@ -404,6 +376,5 @@ std::vector<Article> DbManager::fetchArticlesFromDB(const std::string &filter, c
         const std::string &imgName = query.value(6).toString().toStdString();
         articles.push_back(Article(title, description, url, imgUrl, pubDate, guid, imgName, source, category));
     }
-    qDebug() << "Article Count: " << articles.size();
     return articles;
 }
