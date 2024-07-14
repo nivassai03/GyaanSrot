@@ -33,8 +33,16 @@ void SourceTree::handleItemClicked(QTreeWidgetItem *item, int column)
 {
     if (item->parent())
     {
-        std::string category = item->data(0, Qt::UserRole).toString().toStdString();
-        std::string source = item->data(1, Qt::UserRole).toString().toStdString();
+        category = item->data(0, Qt::UserRole).toString();
+        source = item->data(1, Qt::UserRole).toString();
         emit sourceClicked(category, source);
     }
+}
+QString SourceTree::getCurrentCategory()
+{
+    return category;
+}
+QString SourceTree::getCurrentSource()
+{
+    return source;
 }
