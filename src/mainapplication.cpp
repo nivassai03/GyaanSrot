@@ -120,7 +120,7 @@ void MainApplication::onFilterChanged(const QString &filter)
     const std::string &sortOrder = feedList->getSortOrder().toStdString();
     const std::string &category = sourceTree->getCurrentCategory().toStdString();
     const std::string &source = sourceTree->getCurrentSource().toStdString();
-    const std::vector<Article> &newArticleList = manager.fetchFilteredAndSortedArticles(filter.toStdString(), sortOrder, category, source);
+    const std::vector<Article> &newArticleList = manager.fetchArticlesFromDB(filter.toStdString(), sortOrder, "", category, source);
     reloadNewArticles(newArticleList);
 }
 void MainApplication::onSortChanged(const QString &sortOrder)
@@ -129,7 +129,7 @@ void MainApplication::onSortChanged(const QString &sortOrder)
     const std::string &filter = feedList->getFilter().toStdString();
     const std::string &category = sourceTree->getCurrentCategory().toStdString();
     const std::string &source = sourceTree->getCurrentSource().toStdString();
-    const std::vector<Article> &newArticleList = manager.fetchFilteredAndSortedArticles(filter, sortOrder.toStdString(), category, source);
+    const std::vector<Article> &newArticleList = manager.fetchArticlesFromDB(filter, sortOrder.toStdString(), "", category, source);
     reloadNewArticles(newArticleList);
 }
 

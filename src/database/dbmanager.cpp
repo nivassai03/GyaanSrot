@@ -168,35 +168,6 @@ std::vector<Category> DbManager::fetchCategoriesAndSources()
     return categories;
 }
 
-std::vector<Article> DbManager::fetchArticlesFromDb(const std::string &category, const std::string &source) const
-{
-    std::vector<Article> articles;
-    QSqlQuery query(db);
-    query.prepare("SELECT Articles.title,Articles.description,Articles.url,Articles.img_url,Articles.pub_date,Articles.guid,Articles.img_name "
-                  "FROM Articles "
-                  "INNER JOIN Sources on Sources.source_id = Articles.source_id "
-                  "INNER JOIN Categories on Categories.category_id = Sources.category_id "
-                  "WHERE Sources.source_name = :source AND Categories.category_name = :category ");
-    query.bindValue(":source", QString::fromStdString(source));
-    query.bindValue(":category", QString::fromStdString(category));
-    if (!query.exec())
-    {
-        qDebug() << "Fecth Article From DB Execution Failed: " << query.lastError().text();
-        return articles;
-    }
-    while (query.next())
-    {
-        const std::string &title = query.value(0).toString().toStdString();
-        const std::string &description = query.value(1).toString().toStdString();
-        const std::string &url = query.value(2).toString().toStdString();
-        const std::string &imgUrl = query.value(3).toString().toStdString();
-        const std::chrono::system_clock::time_point &pubDate = fromEpochSeconds(query.value(4).toInt());
-        const std::string &guid = query.value(5).toString().toStdString();
-        const std::string &imgName = query.value(6).toString().toStdString();
-        articles.push_back(Article(title, description, url, imgUrl, pubDate, guid, imgName, source, category));
-    }
-    return articles;
-}
 void DbManager::addDummyData()
 {
     QSqlQuery query;
@@ -262,60 +233,6 @@ int64_t DbManager::getYesterdaysEpochSeconds()
     QDate yesterday = QDate::currentDate().addDays(-1);
     QDateTime startOfYesterday(yesterday.startOfDay(QTimeZone::systemTimeZone()));
     return startOfYesterday.toSecsSinceEpoch();
-}
-
-std::vector<Article> DbManager::fetchFilteredAndSortedArticles(const std::string &filter, const std::string &sortOrder, const std::string &category, const std::string &source)
-{
-    QSqlQuery query(db);
-    std::vector<Article> articles;
-    int64_t todayStart = getTodaysEpochSeconds();
-    int64_t yesterdayStart = getYesterdaysEpochSeconds();
-    QString queryString("SELECT Articles.title,Articles.description,Articles.url,Articles.img_url,Articles.pub_date,Articles.guid,Articles.img_name "
-                        "FROM Articles "
-                        "INNER JOIN Sources on Sources.source_id = Articles.source_id "
-                        "INNER JOIN Categories on Categories.category_id = Sources.category_id "
-                        "WHERE Sources.source_name = :source AND Categories.category_name = :category ");
-    if (filter == "Today")
-    {
-        queryString += "AND " + QString("pub_date >= %1 ").arg(QString::number(todayStart));
-    }
-    if (filter == "Yesterday")
-    {
-        queryString += "AND " + QString("pub_date >= %1 AND pub_date < %2 ").arg(QString::number(yesterdayStart), QString::number(todayStart));
-    }
-    if (sortOrder == "Date Ascending")
-    {
-        queryString += "ORDER BY pub_date ASC ";
-    }
-    if (sortOrder == "Date Descending")
-    {
-        queryString += "ORDER BY pub_date DESC ";
-    }
-    if (sortOrder == "Title")
-    {
-        queryString += "ORDER BY title ";
-    }
-    query.prepare(queryString);
-    query.bindValue(":category", QString::fromStdString(category));
-    query.bindValue(":source", QString::fromStdString(source));
-
-    if (!query.exec())
-    {
-        qDebug() << "Fecth Article From DB Execution Failed: " << query.lastError().text();
-        return articles;
-    }
-    while (query.next())
-    {
-        const std::string &title = query.value(0).toString().toStdString();
-        const std::string &description = query.value(1).toString().toStdString();
-        const std::string &url = query.value(2).toString().toStdString();
-        const std::string &imgUrl = query.value(3).toString().toStdString();
-        const std::chrono::system_clock::time_point &pubDate = fromEpochSeconds(query.value(4).toInt());
-        const std::string &guid = query.value(5).toString().toStdString();
-        const std::string &imgName = query.value(6).toString().toStdString();
-        articles.push_back(Article(title, description, url, imgUrl, pubDate, guid, imgName, source, category));
-    }
-    return articles;
 }
 
 std::vector<Article> DbManager::fetchArticlesFromDB(const std::string &filter, const std::string &sortOrder, const std::string &searchText, const std::string &category, const std::string &source)

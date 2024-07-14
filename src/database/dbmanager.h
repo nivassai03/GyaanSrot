@@ -11,9 +11,6 @@ public:
     DbManager(std::string_view dbName);
     void addDummyData();
     std::vector<Category> fetchCategoriesAndSources();
-    std::vector<Article> fetchArticlesFromDb(const std::string &category, const std::string &source) const;
-    // std::vector<Article> fetchTodaysArticles(const std::string &category, const std::string &source) const;
-    std::vector<Article> fetchFilteredAndSortedArticles(const std::string &filter, const std::string &sortOrder, const std::string &category, const std::string &source);
     std::vector<Article> fetchArticlesFromDB(const std::string &filter, const std::string &sortOrder, const std::string &searchText, const std::string &category, const std::string &source);
     bool insertArticle(const Article &article, int sourceId);
     void insertArticleList(const std::unordered_map<std::string, std::unordered_map<std::string, std::vector<Article>>> &articles);
