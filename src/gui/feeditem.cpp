@@ -56,7 +56,7 @@ FeedItem::FeedItem(QWidget *parent, const Article &art) : QFrame(parent), articl
     thumbnailLabel = new QLabel(this);
     if (!thumbnail.isNull())
     {
-        thumbnailLabel->setPixmap(thumbnail.scaled(150, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        thumbnailLabel->setPixmap(thumbnail);
     }
 
     contentLayout->addWidget(thumbnailLabel);

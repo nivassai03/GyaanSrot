@@ -60,7 +60,7 @@ void QtFeedImageDownloader::saveToDisk(const QString &fileFullPath, const QByteA
     {
         QImage image;
         image.loadFromData(imgData);
-        QImage thumbnail = image.scaled(150, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        QImage thumbnail = image.scaled(150, 100, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         thumbnail.save(fileFullPath);
     }
 }
