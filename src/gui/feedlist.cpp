@@ -8,6 +8,8 @@ FilterSelector::FilterSelector(QWidget *parent) : QWidget(parent)
     filterComboBox->addItem("");
     filterComboBox->addItem("Today");
     filterComboBox->addItem("Yesterday");
+    filterComboBox->addItem("This Week");
+    filterComboBox->addItem("This Month");
     filterComboBox->addItem("All Articles");
 
     searchLineEdit = new QLineEdit(this);

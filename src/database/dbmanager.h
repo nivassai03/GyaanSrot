@@ -26,5 +26,7 @@ private:
     int64_t parseRfc822Date(const std::string &datetime);
     int64_t getTodaysEpochSeconds();
     int64_t getYesterdaysEpochSeconds();
+    int64_t getStartOfWeekEpochSeconds();
+    int64_t getStartOfMonthEpochSeconds();
     QSqlDatabase db;
 };

@@ -235,6 +235,22 @@ int64_t DbManager::getYesterdaysEpochSeconds()
     return startOfYesterday.toSecsSinceEpoch();
 }
 
+int64_t DbManager::getStartOfWeekEpochSeconds()
+{
+    QDate currentDate = QDate::currentDate();
+    int daysToStartOfWeek = currentDate.dayOfWeek() - 1;
+    QDate startOfWeek = currentDate.addDays(-daysToStartOfWeek);
+    QDateTime startOfWeekDateTime(startOfWeek.startOfDay(QTimeZone::systemTimeZone()));
+    return startOfWeekDateTime.toSecsSinceEpoch();
+}
+int64_t DbManager::getStartOfMonthEpochSeconds()
+{
+    QDate currentDate = QDate::currentDate();
+    QDate startOfMonth(currentDate.year(), currentDate.month(), 1);
+    QDateTime startOfMonthDateTime(startOfMonth.startOfDay(QTimeZone::systemTimeZone()));
+    return startOfMonthDateTime.toSecsSinceEpoch();
+}
+
 std::vector<Article> DbManager::fetchArticlesFromDB(const std::string &filter, const std::string &sortOrder, const std::string &searchText, const std::string &category, const std::string &source)
 {
     QSqlQuery query(db);
@@ -248,11 +264,19 @@ std::vector<Article> DbManager::fetchArticlesFromDB(const std::string &filter, c
                         "WHERE Sources.source_name = :source AND Categories.category_name = :category ");
     if (filter == "" || filter == "Today")
     {
-        queryString += "AND " + QString("pub_date >= %1 ").arg(QString::number(todayStart));
+        queryString += "AND " + QString("pub_date >= %1 ").arg(QString::number(getTodaysEpochSeconds()));
     }
     if (filter == "Yesterday")
     {
-        queryString += "AND " + QString("pub_date >= %1 AND pub_date < %2 ").arg(QString::number(yesterdayStart), QString::number(todayStart));
+        queryString += "AND " + QString("pub_date >= %1 AND pub_date < %2 ").arg(QString::number(getYesterdaysEpochSeconds()), QString::number(getTodaysEpochSeconds()));
+    }
+    if (filter == "This Week")
+    {
+        queryString += "AND " + QString("pub_date >= %1 ").arg(QString::number(getStartOfWeekEpochSeconds()));
+    }
+    if (filter == "This Month")
+    {
+        queryString += "AND " + QString("pub_date >= %1 ").arg(QString::number(getStartOfMonthEpochSeconds()));
     }
     if (!searchText.empty())
     {
