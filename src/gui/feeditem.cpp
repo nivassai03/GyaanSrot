@@ -26,8 +26,7 @@ FeedItem::FeedItem(QWidget *parent, const Article &art) : QFrame(parent), articl
     articleUrl = QString::fromStdString(article.getArticleUrl());
 
     // default thumbnail
-    QString defaultThumbnailPath = QString::fromStdString(util.getThumbnailDirFullPath()).append("/").append("default.jpg");
-    defaultThumbnail = QPixmap(defaultThumbnailPath);
+    defaultThumbnail = QPixmap(":/images/default.jpg");
 
     // thumbnail
     if (!article.getImageName().empty())
