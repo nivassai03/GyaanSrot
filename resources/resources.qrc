@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource>
+        <file>images/default.jpg</file>
+        <file>html/default.html</file>
+    </qresource>
+</RCC>
