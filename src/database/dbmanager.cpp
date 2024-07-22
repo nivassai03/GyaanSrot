@@ -7,6 +7,25 @@
 #include "../utils/util.h"
 #include <QSqlQuery>
 
+DbManager::DbManager(std::string_view dbName)
+{
+    setupDatabase(dbName);
+    if (!db.open())
+    {
+        qDebug() << "Error! Connection with databasae failed\n";
+    }
+    else
+    {
+        qDebug() << "Database connection succeeded\n";
+    }
+    createCategoryTable();
+    createSourceTable();
+    createArticleTable();
+    createIndexes();
+    createInstalledSourcesTable();
+    addInitialCategoriesAndSources();
+}
+
 void DbManager::setupDatabase(std::string_view dbName)
 {
     QtDirUtil util;
@@ -79,6 +98,20 @@ void DbManager::createArticleTable()
                "img_name TEXT,"
                "source_id INTEGER,"
                "FOREIGN KEY (source_id) REFERENCES Sources(source_id))");
+}
+
+void DbManager::createInstalledSourcesTable()
+{
+    QSqlQuery query(db);
+    if (!query.exec("CREATE TABLE IF NOT EXISTS InstalledSources ("
+                    "source_id INTEGER PRIMARY KEY,"
+                    "category_id INTEGER,"
+                    "install_date INTEGER NOT NULL,"
+                    "FOREIGN KEY (source_id) REFERENCES Sources(source_id),"
+                    "FOREIGN KEY (category_id) REFERENCES Categories(category_id))"))
+    {
+        qDebug() << "Error Creating Installed Sources Table: " << query.lastError().text();
+    }
 }
 
 bool DbManager::insertArticle(const Article &article, int sourceId)

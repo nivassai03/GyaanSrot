@@ -22,6 +22,7 @@ private:
     void addInitialCategoriesAndSources();
     void createSourceTable();
     void createArticleTable();
+    void createInstalledSourcesTable();
     void createIndexes();
     int64_t parseRfc822Date(const std::string &datetime);
     int64_t getTodaysEpochSeconds();
