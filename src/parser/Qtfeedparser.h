@@ -11,6 +11,5 @@ public:
 
 private:
     void parseItem(QXmlStreamReader &xml, Article &item);
-    QString parseImageUrlFromMedia(QXmlStreamReader &xml);
     int64_t parseRfc822Date(const QString &datetime);
 };

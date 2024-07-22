@@ -1,4 +1,4 @@
-set(GUI_SRC_FILES "feeditem.h" "feeditem.cpp" "feedlist.h" "feedlist.cpp" "elidedlabel.h" "elidedlabel.cpp" "sourcetree.h" "sourcetree.cpp" "webview.h" "webview.cpp")
+set(GUI_SRC_FILES "feeditem.h" "feeditem.cpp" "feedlist.h" "feedlist.cpp" "elidedlabel.h" "elidedlabel.cpp" "sourcetree.h" "sourcetree.cpp" "webview.h" "webview.cpp" "sourceinstalldialog.h" "sourceinstalldialog.cpp")
 
 add_library(Gui ${GUI_SRC_FILES})
 
