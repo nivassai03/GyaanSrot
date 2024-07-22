@@ -74,16 +74,6 @@ void DbManager::createSourceTable()
                "FOREIGN KEY (category_id) REFERENCES Categories(category_id))");
 }
 
-int64_t DbManager::parseRfc822Date(const std::string &datetime)
-{
-    QDateTime dateTime = QDateTime::fromString(QString::fromStdString(datetime), Qt::RFC2822Date);
-    if (!dateTime.isValid())
-    {
-        return QDateTime::currentDateTime().toSecsSinceEpoch();
-    }
-    return dateTime.toSecsSinceEpoch();
-}
-
 void DbManager::createArticleTable()
 {
     QSqlQuery query(db);
@@ -201,39 +191,78 @@ std::vector<Category> DbManager::fetchCategoriesAndSources()
     return categories;
 }
 
-void DbManager::addDummyData()
+std::vector<Category> DbManager::fetchInstalledCategoriesAndSources()
 {
-    QSqlQuery query;
-    query.prepare("insert into articles (id,title,description,url)"
-                  "values (:id,:title,:description,:url)");
-    for (int i = 0; i < 20; i++)
+    QSqlQuery categoryQuery(db);
+    std::vector<Category> categories;
+    if (!categoryQuery.exec("SELECT DISTINCT Categories.category_name,Categories.category_id "
+                            "FROM Categories "
+                            "INNER JOIN InstalledSources ON Categories.category_id = InstalledSources.category_id "))
     {
-        query.bindValue(":id", i);
-        query.bindValue(":title", QString("title").append(QString::number(i)));
-        query.bindValue(":description", QString("description").append(QString::number(i)));
-        query.bindValue(":url", QString("url").append(QString::number(i)));
-        query.exec();
+        qDebug() << "Failed to fetch installed categories: " << categoryQuery.lastError().text();
     }
+
+    while (categoryQuery.next())
+    {
+        const std::string &category_name = categoryQuery.value(0).toString().toStdString();
+        int categoryId = categoryQuery.value(1).toInt();
+
+        Category category(category_name);
+
+        QSqlQuery sourceQuery(db);
+        sourceQuery.prepare("SELECT Sources.source_name,Sources.source_url "
+                            "FROM Sources "
+                            "INNER JOIN InstalledSources ON Sources.source_id = InstalledSources.source_id "
+                            "WHERE InstalledSources.category_id = :categoryId ");
+
+        sourceQuery.bindValue(":categoryId", categoryId);
+
+        if (!sourceQuery.exec())
+        {
+            qDebug() << "Failed to Fetch Sources: " << sourceQuery.lastError().text();
+        }
+        while (sourceQuery.next())
+        {
+            const std::string &source_name = sourceQuery.value(0).toString().toStdString();
+            const std::string &source_url = sourceQuery.value(1).toString().toStdString();
+            category.addSource(Source(source_name, source_url));
+        }
+        categories.push_back(category);
+    }
+    return categories;
 }
 
-DbManager::DbManager(std::string_view dbName)
+std::vector<Category> DbManager::fetchNotInstalledCategoriesAndSources()
 {
-    setupDatabase(dbName);
-    if (!db.open())
-    {
-        qDebug() << "Error! Connection with databasae failed\n";
-    }
-    else
-    {
-        qDebug() << "Database connection succeeded\n";
-    }
-    createCategoryTable();
-    createSourceTable();
-    createArticleTable();
-    createIndexes();
-    addInitialCategoriesAndSources();
-}
+    QSqlQuery query(db);
+    QString queryString = "SELECT Categories.category_id,Categories.category_name,Sources.source_name,Sources.source_url "
+                          "FROM Sources "
+                          "LEFT JOIN InstalledSources ON Sources.source_id = InstalledSources.source_id "
+                          "LEFT JOIN Categories ON Categories.category_id = Sources.category_id "
+                          "WHERE InstalledSources.source_id IS NULL";
 
+    if (!query.exec(queryString))
+    {
+        qDebug() << "Fetch Not Installed Sources Failed: " << query.lastError().text();
+    }
+    QHash<int, Category> categoryMap;
+    while (query.next())
+    {
+        int categoryId = query.value(0).toInt();
+        const std::string &category_name = query.value(1).toString().toStdString();
+        const std::string &source_name = query.value(2).toString().toStdString();
+        const std::string &source_url = query.value(3).toString().toStdString();
+        if (!categoryMap.contains(categoryId))
+        {
+            Category category(category_name);
+            categoryMap.insert(categoryId, category);
+        }
+        Source source(source_name, source_url);
+        categoryMap[categoryId].addSource(source);
+    }
+    const QList<Category> &QCategories = categoryMap.values();
+    return std::vector<Category>(QCategories.constBegin(), QCategories.constEnd());
+}
 void DbManager::createIndexes()
 {
     QSqlQuery query(db);
@@ -254,42 +283,10 @@ void DbManager::createIndexes()
         qDebug() << "Title Index Failed: " << query.lastError().text();
     }
 }
-
-int64_t DbManager::getTodaysEpochSeconds()
-{
-    QDate currentDate = QDate::currentDate();
-    QDateTime startOfDay(currentDate.startOfDay(QTimeZone::systemTimeZone()));
-    return startOfDay.toSecsSinceEpoch();
-}
-int64_t DbManager::getYesterdaysEpochSeconds()
-{
-    QDate yesterday = QDate::currentDate().addDays(-1);
-    QDateTime startOfYesterday(yesterday.startOfDay(QTimeZone::systemTimeZone()));
-    return startOfYesterday.toSecsSinceEpoch();
-}
-
-int64_t DbManager::getStartOfWeekEpochSeconds()
-{
-    QDate currentDate = QDate::currentDate();
-    int daysToStartOfWeek = currentDate.dayOfWeek() - 1;
-    QDate startOfWeek = currentDate.addDays(-daysToStartOfWeek);
-    QDateTime startOfWeekDateTime(startOfWeek.startOfDay(QTimeZone::systemTimeZone()));
-    return startOfWeekDateTime.toSecsSinceEpoch();
-}
-int64_t DbManager::getStartOfMonthEpochSeconds()
-{
-    QDate currentDate = QDate::currentDate();
-    QDate startOfMonth(currentDate.year(), currentDate.month(), 1);
-    QDateTime startOfMonthDateTime(startOfMonth.startOfDay(QTimeZone::systemTimeZone()));
-    return startOfMonthDateTime.toSecsSinceEpoch();
-}
-
 std::vector<Article> DbManager::fetchArticlesFromDB(const std::string &filter, const std::string &sortOrder, const std::string &searchText, const std::string &category, const std::string &source)
 {
     QSqlQuery query(db);
     std::vector<Article> articles;
-    int64_t todayStart = getTodaysEpochSeconds();
-    int64_t yesterdayStart = getYesterdaysEpochSeconds();
     QString queryString("SELECT Articles.title,Articles.description,Articles.url,Articles.img_url,Articles.pub_date,Articles.guid,Articles.img_name "
                         "FROM Articles "
                         "INNER JOIN Sources on Sources.source_id = Articles.source_id "
@@ -351,4 +348,113 @@ std::vector<Article> DbManager::fetchArticlesFromDB(const std::string &filter, c
         articles.push_back(Article(title, description, url, imgUrl, pubDate, guid, imgName, source, category));
     }
     return articles;
+}
+void DbManager::installSource(const std::string &category, const std::string &source)
+{
+    QSqlQuery checkQuery(db);
+    checkQuery.prepare("SELECT Sources.source_id,Sources.category_id "
+                       "FROM Sources "
+                       "INNER JOIN Categories on Sources.category_id = Categories.category_id "
+                       "WHERE Sources.source_name = :source AND Categories.category_name = :category ");
+    checkQuery.bindValue(":source", QString::fromStdString(source));
+    checkQuery.bindValue(":category", QString::fromStdString(category));
+    if (!checkQuery.exec())
+    {
+        qDebug() << "Queyring Installed Sources Failed: " << checkQuery.lastError().text();
+    }
+    if (!checkQuery.next())
+    {
+        qDebug() << "Source Not Found in Source Table: " << checkQuery.lastError().text();
+    }
+
+    int sourceId = checkQuery.value(0).toInt();
+    int categoryId = checkQuery.value(1).toInt();
+
+    QSqlQuery installQuery(db);
+    installQuery.exec("BEGIN TRANSACTION");
+    installQuery.prepare("INSERT OR IGNORE INTO InstalledSources (source_id,category_id,install_date) VALUES (:source_id,:category_id,:install_date)");
+    installQuery.bindValue(":source_id", sourceId);
+    installQuery.bindValue(":category_id", categoryId);
+    installQuery.bindValue(":install_date", (qint64)getCurrentEpochSeconds());
+    if (!installQuery.exec())
+    {
+        qDebug() << "Failed to install Source: " << installQuery.lastError().text();
+    }
+
+    installQuery.exec("END TRANSACTION");
+}
+
+void DbManager::uninstallSource(const std::string &category, const std::string &source)
+{
+    QSqlQuery checkQuery(db);
+    checkQuery.prepare("SELECT Sources.source_id "
+                       "FROM Sources "
+                       "INNER JOIN Categories ON Sources.category_id = Categories.category_id "
+                       "WHERE Categories.category_name = :category AND Sources.source_name = :source ");
+
+    checkQuery.bindValue(":category", QString::fromStdString(category));
+    checkQuery.bindValue(":source", QString::fromStdString(source));
+
+    if (!checkQuery.exec())
+    {
+        qDebug() << "Failed to fetch Sources: " << checkQuery.lastError().text();
+    }
+    if (!checkQuery.next())
+    {
+        qDebug() << "Source not found in Sources: " << checkQuery.lastError().text();
+    }
+    int sourceId = checkQuery.value(0).toInt();
+
+    QSqlQuery deleteQuery(db);
+    deleteQuery.prepare("DELETE FROM InstalledSources "
+                        "WHERE InstalledSources.source_id = :sourceId ");
+    deleteQuery.bindValue(":sourceId", sourceId);
+    if (!deleteQuery.exec())
+    {
+        qDebug() << "Deleting Row Failed: " << deleteQuery.lastError().text();
+    }
+}
+
+int64_t DbManager::parseRfc822Date(const std::string &datetime)
+{
+    QDateTime dateTime = QDateTime::fromString(QString::fromStdString(datetime), Qt::RFC2822Date);
+    if (!dateTime.isValid())
+    {
+        return QDateTime::currentDateTime().toSecsSinceEpoch();
+    }
+    return dateTime.toSecsSinceEpoch();
+}
+
+int64_t DbManager::getTodaysEpochSeconds()
+{
+    QDate currentDate = QDate::currentDate();
+    QDateTime startOfDay(currentDate.startOfDay(QTimeZone::systemTimeZone()));
+    return startOfDay.toSecsSinceEpoch();
+}
+int64_t DbManager::getYesterdaysEpochSeconds()
+{
+    QDate yesterday = QDate::currentDate().addDays(-1);
+    QDateTime startOfYesterday(yesterday.startOfDay(QTimeZone::systemTimeZone()));
+    return startOfYesterday.toSecsSinceEpoch();
+}
+
+int64_t DbManager::getStartOfWeekEpochSeconds()
+{
+    QDate currentDate = QDate::currentDate();
+    int daysToStartOfWeek = currentDate.dayOfWeek() - 1;
+    QDate startOfWeek = currentDate.addDays(-daysToStartOfWeek);
+    QDateTime startOfWeekDateTime(startOfWeek.startOfDay(QTimeZone::systemTimeZone()));
+    return startOfWeekDateTime.toSecsSinceEpoch();
+}
+int64_t DbManager::getStartOfMonthEpochSeconds()
+{
+    QDate currentDate = QDate::currentDate();
+    QDate startOfMonth(currentDate.year(), currentDate.month(), 1);
+    QDateTime startOfMonthDateTime(startOfMonth.startOfDay(QTimeZone::systemTimeZone()));
+    return startOfMonthDateTime.toSecsSinceEpoch();
+}
+
+int64_t DbManager::getCurrentEpochSeconds()
+{
+    return QDateTime::currentDateTime().currentSecsSinceEpoch();
 }
